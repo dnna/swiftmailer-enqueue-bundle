@@ -26,8 +26,8 @@ class DnnaSwiftmailerEnqueueExtension extends Extension
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('config.yml');
 
-        $mainConfig = $this->getConfiguration($configs, $container);
-        $config = $this->processConfiguration($mainConfig, $configs);
+        $configuration = new Configuration();
+        $config = $this->processConfiguration($configuration, $configs);
 
         foreach ($config['class'] as $name => $class) {
             $container->setParameter(sprintf('dnna_swiftmailer_enqueue.%s.class', $name), $class);
