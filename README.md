@@ -3,10 +3,6 @@ This is a symfony bundle that allows using an [Enqueue](https://github.com/php-e
 
 Basically an implementation of https://blog.forma-pro.com/spool-swiftmailer-emails-to-real-message-queue-9ecb8b53b5de with extra features like graceful shutdowns and other customization options.
 
-**Warning**: Installing this bundle changes `swiftmailer:spool:send` into a blocking command.
-This means it will not exit until the time or message limit specified has been reached.
-If no limits are specified the command will never exit.
-
 Installation
 ============
 
@@ -78,3 +74,7 @@ dnna_swiftmailer_enqueue:
 ```
 
 All parameters are optional and if not set will use the default values.
+
+**Warning**: Installing this bundle changes `swiftmailer:spool:send` into a blocking command.
+This means it will not exit until the time or message limit specified has been reached.
+If no limits are specified the command will never exit.
