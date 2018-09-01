@@ -29,15 +29,11 @@ class DnnaSwiftmailerEnqueueExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        foreach ($config['class'] as $name => $class) {
-            $container->setParameter(sprintf('dnna_swiftmailer_enqueue.%s.class', $name), $class);
-        }
-
         $def = new Definition($container->getParameter('dnna_swiftmailer_enqueue.swiftmailer_spool.class'));
         $def->setPublic(false);
         $def->setArguments([
-            new Reference(sprintf('dnna_swiftmailer_enqueue.%s', $config['swiftmailer']['client'])),
-            $config['swiftmailer']['key']
+            new Reference($config['queue']['service_id']),
+            $config['queue']['key']
         ]);
         $container->setDefinition('dnna_swiftmailer_enqueue.swiftmailer.spool', $def);
         $container->setAlias('swiftmailer.spool.enqueue', 'dnna_swiftmailer_enqueue.swiftmailer.spool');

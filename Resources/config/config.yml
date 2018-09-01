@@ -1,0 +1,2 @@
+parameters:
+  dnna_swiftmailer_enqueue.swiftmailer_spool.class: Dnna\SwiftmailerEnqueueBundle\SwiftMailer\QueueSpool

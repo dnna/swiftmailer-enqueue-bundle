@@ -45,6 +45,7 @@ class AppKernel extends Kernel
     {
         $bundles = array(
             // ...
+            new Enqueue\Bundle\EnqueueBundle(),
             new Dnna\SwiftmailerEnqueueBundle\SwiftmailerEnqueueBundle(),
         );
 

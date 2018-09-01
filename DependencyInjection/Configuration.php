@@ -15,9 +15,14 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 ->arrayNode('queue')
+                ->addDefaultsIfNotSet()
                     ->children()
-                        ->scalarNode('service_id')->end()
-                        ->scalarNode('key')->end()
+                        ->scalarNode('service_id')
+                            ->defaultValue('enqueue.transport.context')
+                        ->end()
+                        ->scalarNode('key')
+                            ->defaultValue('swiftmailer_spool')
+                        ->end()
                     ->end()
                 ->end() // queue
             ->end()
