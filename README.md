@@ -1,5 +1,7 @@
 # swiftmailer-enqueue-bundle
-Symfony bundle that allows using an [Enqueue](https://github.com/php-enqueue/enqueue-bundle) message queue to spool and consume messages.  
+This is a symfony bundle that allows using an [Enqueue](https://github.com/php-enqueue/enqueue-bundle) message queue to spool and consume messages.
+
+Basically an implementation of https://blog.forma-pro.com/spool-swiftmailer-emails-to-real-message-queue-9ecb8b53b5de with extra features like graceful shutdowns and other customization options.
 
 **Warning**: Installing this bundle changes `swiftmailer:spool:send` into a blocking command.
 This means it will not exit until the time or message limit specified has been reached.
