@@ -1,0 +1,24 @@
+{
+  "name": "dnna/swiftmailer-enqueue-bundle",
+  "type": "symfony-bundle",
+  "description": "Swiftmailer Spool using the Enqueue message queue",
+  "keywords": ["swiftmailer", "queue", "spool"],
+  "homepage": "https://github.com/dnna/swiftmailer-enqueue-bundle",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Dimosthenis Nikoudis",
+      "email": "dnna@dnna.gr"
+    }
+  ],
+  "require": {
+    "enqueue/enqueue-bundle": "0.8.*"
+  },
+  "config": {
+    "bin-dir": "bin"
+  },
+  "autoload": {
+    "psr-0": { "Dnna\\SwiftmailerEnqueueBundle": "" }
+  },
+  "target-dir": "Dnna/SwiftmailerEnqueueBundle"
+}
