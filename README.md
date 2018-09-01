@@ -1,5 +1,9 @@
 # swiftmailer-enqueue-bundle
-Symfony bundle that allows using an [Enqueue](https://github.com/php-enqueue/enqueue-bundle) message queue to spool and consume messages.
+Symfony bundle that allows using an [Enqueue](https://github.com/php-enqueue/enqueue-bundle) message queue to spool and consume messages.  
+
+**Warning**: Installing this bundle changes `swiftmailer:spool:send` into a blocking command.
+This means it will not exit until the time or message limit specified has been reached.
+If no limits are specified the command will never exit.
 
 Installation
 ============
@@ -55,3 +59,20 @@ class AppKernel extends Kernel
     // ...
 }
 ```
+
+## Usage ##
+
+Below is the configuration reference for this bundle:
+
+``` yaml
+dnna_swiftmailer_enqueue:
+    queue:
+        service_id: enqueue.transport.context
+        key: swiftmailer_spool
+    consumption:
+        receive_timeout: 1000
+    extensions:
+        signal_extension: true
+```
+
+All parameters are optional and if not set will use the default values.
