@@ -105,17 +105,23 @@ class QueueSpool extends \Swift_ConfigurableSpool
             $this->triggerExtensionHook($consumptionContext, 'onBeforeReceive');
             if ($psrMessage = $consumer->receive($this->receiveTimeout)) {
                 try {
-                    if (!$transport->ping()) {
-                        $transport->stop();
-                        $isTransportStarted = false;
-                    }
                     if (false == $isTransportStarted) {
                         $transport->start();
                         $isTransportStarted = true;
                     }
                     $message = unserialize($psrMessage->getBody());
-                    $count += $transport->send($message, $failedRecipients);
+                    try {
+                        $count += $transport->send($message, $failedRecipients);
+                    } catch (\Swift_TransportException $te) {
+                        // Retry once in case we encountered the infamous:
+                        // Expected response code 250 but got code "421", with message
+                        // "421 Timeout waiting for data from client."
+                        $transport->stop();
+                        $transport->start();
+                        $count += $transport->send($message, $failedRecipients);
+                    }
                 } catch (\Exception $e) {
+                    // Requeue the email
                     $this->handleException($e, $psrMessage);
                     $consumer->reject($psrMessage);
 
