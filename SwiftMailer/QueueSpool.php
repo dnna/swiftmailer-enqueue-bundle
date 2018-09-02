@@ -112,7 +112,10 @@ class QueueSpool extends \Swift_ConfigurableSpool
                     $message = unserialize($psrMessage->getBody());
                     $count += $transport->send($message, $failedRecipients);
                 } catch (\Exception $e) {
-                    return $this->handleException($e, $psrMessage);
+                    $this->handleException($e, $psrMessage);
+                    $consumer->reject($psrMessage);
+
+                    return $count;
                 }
                 $consumer->acknowledge($psrMessage);
             }
@@ -128,16 +131,20 @@ class QueueSpool extends \Swift_ConfigurableSpool
     {
         if ($this->getMessageLimit() && $count >= $this->getMessageLimit()) {
             $this->logger->debug('Exiting because we reached the message limit');
+
             return true;
         }
         if ($this->getTimeLimit() && (time() - $time) >= $this->getTimeLimit()) {
             $this->logger->debug('Exiting because we reached the time limit');
+
             return true;
         }
         if ($consumptionContext->isExecutionInterrupted()) {
             $this->logger->debug('Exiting because we received an interrupt');
+
             return true;
         }
+
         return false;
     }
 
@@ -157,12 +164,14 @@ class QueueSpool extends \Swift_ConfigurableSpool
             $psrMessage->setProperty('requeue_attempt', ++$attempt);
             if ($attempt < $this->maxRequeueAttempts) {
                 $this->context->createProducer()->send($this->queue, $psrMessage);
-                $this->logger->info('Requeued message for attempt #' . $attempt);
+                $this->logger->error(
+                    'Requeued message for attempt #' . $attempt . '. Exception was: ' . $e->getMessage()
+                );
             } else {
                 $this->logger->error('Will not requeue message because we reached max attempts (#' . $attempt . ')');
+                throw $e; // Make sure the current worker dies so it doesn't try to reprocess the same message
             }
         }
-        throw $e; // Make sure the current worker dies so it doesn't try to reprocess the same message
     }
 
     private function triggerExtensionHook(ConsumptionContext $context, $hook)
