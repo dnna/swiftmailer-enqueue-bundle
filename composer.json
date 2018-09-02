@@ -2,7 +2,7 @@
   "name": "dnna/swiftmailer-enqueue-bundle",
   "type": "symfony-bundle",
   "description": "Swiftmailer Spool using the Enqueue message queue",
-  "keywords": ["swiftmailer", "queue", "spool"],
+  "keywords": ["swiftmailer", "queue", "enqueue", "spool"],
   "homepage": "https://github.com/dnna/swiftmailer-enqueue-bundle",
   "license": "MIT",
   "authors": [
