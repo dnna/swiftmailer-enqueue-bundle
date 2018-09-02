@@ -42,6 +42,8 @@ class DnnaSwiftmailerEnqueueExtension extends Extension
             $config['consumption']['receive_timeout'],
             $extensions,
             new Reference('logger'),
+            $config['queue']['requeue_on_exception'],
+            $config['queue']['max_requeue_attempts'],
         ]);
         $container->setDefinition('dnna_swiftmailer_enqueue.swiftmailer.spool', $def);
         $container->setAlias('swiftmailer.spool.enqueue', 'dnna_swiftmailer_enqueue.swiftmailer.spool');

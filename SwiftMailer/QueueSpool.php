@@ -4,6 +4,7 @@ namespace Dnna\SwiftmailerEnqueueBundle\SwiftMailer;
 
 use Interop\Queue\ExceptionInterface as PsrException;
 use Interop\Queue\PsrContext;
+use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrQueue;
 use Enqueue\Consumption\Context as ConsumptionContext;
 
@@ -29,6 +30,14 @@ class QueueSpool extends \Swift_ConfigurableSpool
      * @var $logger
      */
     private $logger;
+    /**
+     * @var $requeueOnException
+     */
+    private $requeueOnException;
+    /**
+     * @var $maxRequeueAttempts
+     */
+    private $maxRequeueAttempts;
 
     /**
      * @param PsrContext $context
@@ -36,9 +45,18 @@ class QueueSpool extends \Swift_ConfigurableSpool
      * @param $receiveTimeout
      * @param $extensions
      * @param $logger
+     * @param $requeueOnException
+     * @param $maxRequeueAttempts
      */
-    public function __construct(PsrContext $context, $queue, $receiveTimeout, $extensions, $logger)
-    {
+    public function __construct(
+        PsrContext $context,
+        $queue,
+        $receiveTimeout,
+        $extensions,
+        $logger,
+        $requeueOnException,
+        $maxRequeueAttempts
+    ) {
         $this->context = $context;
         if (false == $queue instanceof PsrQueue) {
             $queue = $this->context->createQueue($queue);
@@ -47,6 +65,8 @@ class QueueSpool extends \Swift_ConfigurableSpool
         $this->receiveTimeout = $receiveTimeout;
         $this->extensions = $extensions;
         $this->logger = $logger;
+        $this->requeueOnException = $requeueOnException;
+        $this->maxRequeueAttempts = $maxRequeueAttempts;
     }
 
     /**
@@ -64,7 +84,12 @@ class QueueSpool extends \Swift_ConfigurableSpool
     }
 
     /**
-     * {@inheritdoc}
+     * @param \Swift_Transport $transport
+     * @param null $failedRecipients
+     * @return int
+     * @throws \Interop\Queue\Exception
+     * @throws \Interop\Queue\InvalidDestinationException
+     * @throws \Interop\Queue\InvalidMessageException
      */
     public function flushQueue(\Swift_Transport $transport, &$failedRecipients = null)
     {
@@ -79,29 +104,65 @@ class QueueSpool extends \Swift_ConfigurableSpool
         while (true) {
             $this->triggerExtensionHook($consumptionContext, 'onBeforeReceive');
             if ($psrMessage = $consumer->receive($this->receiveTimeout)) {
-                if (false == $isTransportStarted) {
-                    $transport->start();
-                    $isTransportStarted = true;
+                try {
+                    if (false == $isTransportStarted) {
+                        $transport->start();
+                        $isTransportStarted = true;
+                    }
+                    $message = unserialize($psrMessage->getBody());
+                    $count += $transport->send($message, $failedRecipients);
+                } catch (\Exception $e) {
+                    return $this->handleException($e, $psrMessage);
                 }
-                $message = unserialize($psrMessage->getBody());
-                $count += $transport->send($message, $failedRecipients);
                 $consumer->acknowledge($psrMessage);
             }
-            if ($this->getMessageLimit() && $count >= $this->getMessageLimit()) {
-                $this->logger->debug('Exiting because we reached the message limit');
-                break;
-            }
-            if ($this->getTimeLimit() && (time() - $time) >= $this->getTimeLimit()) {
-                $this->logger->debug('Exiting because we reached the time limit');
-                break;
-            }
-            if ($consumptionContext->isExecutionInterrupted()) {
-                $this->logger->debug('Exiting because we received an interrupt');
+            if ($this->reachedExitCondition($count, $time, $consumptionContext)) {
                 break;
             }
         }
 
         return $count;
+    }
+
+    private function reachedExitCondition($count, $time, $consumptionContext)
+    {
+        if ($this->getMessageLimit() && $count >= $this->getMessageLimit()) {
+            $this->logger->debug('Exiting because we reached the message limit');
+            return true;
+        }
+        if ($this->getTimeLimit() && (time() - $time) >= $this->getTimeLimit()) {
+            $this->logger->debug('Exiting because we reached the time limit');
+            return true;
+        }
+        if ($consumptionContext->isExecutionInterrupted()) {
+            $this->logger->debug('Exiting because we received an interrupt');
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param \Exception $e
+     * @param PsrMessage $psrMessage
+     * @throws \Interop\Queue\Exception
+     * @throws \Interop\Queue\InvalidDestinationException
+     * @throws \Interop\Queue\InvalidMessageException
+     * @throws \Exception
+     */
+    private function handleException(\Exception $e, PsrMessage $psrMessage)
+    {
+        if ($this->requeueOnException) {
+            $attempt = $psrMessage->getProperty('requeue_attempt', 1);
+            $psrMessage->setRedelivered(true);
+            $psrMessage->setProperty('requeue_attempt', ++$attempt);
+            if ($attempt < $this->maxRequeueAttempts) {
+                $this->context->createProducer()->send($this->queue, $psrMessage);
+                $this->logger->info('Requeued message for attempt #' . $attempt);
+            } else {
+                $this->logger->error('Will not requeue message because we reached max attempts (#' . $attempt . ')');
+            }
+        }
+        throw $e; // Make sure the current worker dies so it doesn't try to reprocess the same message
     }
 
     private function triggerExtensionHook(ConsumptionContext $context, $hook)

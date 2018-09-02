@@ -69,6 +69,8 @@ dnna_swiftmailer_enqueue:
     queue:
         service_id: enqueue.transport.context
         key: swiftmailer_spool
+        requeue_on_exception: false
+        max_requeue_attempts: 5
     consumption:
         receive_timeout: 1000
     extensions:
