@@ -112,7 +112,7 @@ class QueueSpool extends \Swift_ConfigurableSpool
                     $message = unserialize($psrMessage->getBody());
                     try {
                         $count += $transport->send($message, $failedRecipients);
-                    } catch (\Throwable $te) {
+                    } catch (\Swift_TransportException $te) {
                         // Retry once in case we encountered the infamous:
                         // Expected response code 250 but got code "421", with message
                         // "421 Timeout waiting for data from client."
@@ -120,7 +120,7 @@ class QueueSpool extends \Swift_ConfigurableSpool
                         $transport->start();
                         $count += $transport->send($message, $failedRecipients);
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     // Requeue the email
                     $this->handleException($e, $psrMessage);
                     $consumer->reject($psrMessage);
