@@ -101,6 +101,18 @@ class QueueSpool extends \Swift_ConfigurableSpool
         $consumptionContext = new ConsumptionContext($this->context);
         $consumptionContext->setLogger($this->logger);
         $this->triggerExtensionHook($consumptionContext, 'onStart');
+        // Turn errors into exceptions so we catch warnings such as
+        // fwrite(): SSL: Broken pipe
+        set_error_handler(
+            function ($errno, $errstr, $errfile, $errline) {
+                // error was suppressed with the @-operator
+                if (0 === error_reporting()) {
+                    return false;
+                }
+
+                throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
+            }
+        );
         while (true) {
             $this->triggerExtensionHook($consumptionContext, 'onBeforeReceive');
             if ($psrMessage = $consumer->receive($this->receiveTimeout)) {
@@ -124,6 +136,7 @@ class QueueSpool extends \Swift_ConfigurableSpool
                     // Requeue the email
                     $this->handleException($e, $psrMessage);
                     $consumer->reject($psrMessage);
+                    restore_error_handler();
 
                     return $count;
                 }
@@ -133,6 +146,8 @@ class QueueSpool extends \Swift_ConfigurableSpool
                 break;
             }
         }
+
+        restore_error_handler();
 
         return $count;
     }
