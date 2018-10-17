@@ -189,7 +189,7 @@ class QueueSpool extends \Swift_ConfigurableSpool
             $psrMessage->setProperty('requeue_attempt', ++$attempt);
             if ($attempt < $this->maxRequeueAttempts) {
                 $this->context->createProducer()->send($this->queue, $psrMessage);
-                $this->logger->error(
+                $this->logger->info(
                     'Requeued message for attempt #' . $attempt . '. Exception was: ' . $e->getMessage()
                 );
             } else {
