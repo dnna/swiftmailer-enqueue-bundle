@@ -78,8 +78,9 @@ class QueueSpool extends \Swift_ConfigurableSpool
         try {
             $message = $this->context->createMessage(serialize($message));
             $this->context->createProducer()->send($this->queue, $message);
-        } catch (PsrException $e) {
-            throw new \Swift_IoException(sprintf('Unable to send message to message queue.'), null, $e);
+        } catch (\Throwable $e) {
+            $this->logger->info('Unable to send message to message queue.');
+            return; // Prevent producer issues from crashing the whole app
         }
     }
 
