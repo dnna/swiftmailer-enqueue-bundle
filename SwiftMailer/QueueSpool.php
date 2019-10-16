@@ -2,10 +2,10 @@
 
 namespace Dnna\SwiftmailerEnqueueBundle\SwiftMailer;
 
-use Interop\Queue\ExceptionInterface as PsrException;
-use Interop\Queue\PsrContext;
-use Interop\Queue\PsrMessage;
-use Interop\Queue\PsrQueue;
+use Interop\Queue\Exception as PsrException;
+use Interop\Queue\Context as PsrContext;
+use Interop\Queue\Message as PsrMessage;
+use Interop\Queue\Queue as PsrQueue;
 use Enqueue\Consumption\Context as ConsumptionContext;
 
 class QueueSpool extends \Swift_ConfigurableSpool
