@@ -12,7 +12,7 @@
     }
   ],
   "require": {
-    "enqueue/enqueue-bundle": "0.8.*"
+    "enqueue/enqueue-bundle": "0.8.*|0.9.*"
   },
   "config": {
     "bin-dir": "bin"
