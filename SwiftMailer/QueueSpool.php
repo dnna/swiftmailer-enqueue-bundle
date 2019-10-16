@@ -116,7 +116,8 @@ class QueueSpool extends \Swift_ConfigurableSpool
         );
         $cycle = 1;
         while (true) {
-            $this->triggerExtensionHook(new PreConsume($this->context, $consumer, $this->logger, $cycle, $this->receiveTimeout, $startTime), 'onPreConsume');
+            $consumptionContext = new PreConsume($this->context, $consumer, $this->logger, $cycle, $this->receiveTimeout, $startTime);
+            $this->triggerExtensionHook($consumptionContext, 'onPreConsume');
             if ($psrMessage = $consumer->receive($this->receiveTimeout)) {
                 try {
                     if (false == $isTransportStarted) {
