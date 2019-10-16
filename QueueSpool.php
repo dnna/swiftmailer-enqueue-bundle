@@ -1,9 +1,9 @@
 <?php
 namespace Demo\Swiftmailer;
 
-use Interop\Queue\ExceptionInterface as PsrException;
-use Interop\Queue\PsrContext;
-use Interop\Queue\PsrQueue;
+use Interop\Queue\Exception as PsrException;
+use Interop\Queue\Context as PsrContext;
+use Interop\Queue\Queue as PsrQueue;
 use Swift_Mime_SimpleMessage;
 use Swift_Transport;
 
