@@ -2,11 +2,12 @@
 
 namespace Dnna\SwiftmailerEnqueueBundle\SwiftMailer;
 
+use Enqueue\Consumption\Context\PreConsume;
+use Enqueue\Consumption\Context\Start;
 use Interop\Queue\Exception as PsrException;
 use Interop\Queue\Context as PsrContext;
 use Interop\Queue\Message as PsrMessage;
 use Interop\Queue\Queue as PsrQueue;
-use Enqueue\Consumption\Context as ConsumptionContext;
 
 class QueueSpool extends \Swift_ConfigurableSpool
 {
@@ -99,9 +100,8 @@ class QueueSpool extends \Swift_ConfigurableSpool
         $failedRecipients = (array)$failedRecipients;
         $count = 0;
         $time = time();
-        $consumptionContext = new ConsumptionContext($this->context);
-        $consumptionContext->setLogger($this->logger);
-        $this->triggerExtensionHook($consumptionContext, 'onStart');
+        $startTime = (int) (microtime(true) * 1000);
+        $this->triggerExtensionHook(new Start($this->context, $this->logger, [], $this->receiveTimeout, $startTime), 'onStart');
         // Turn errors into exceptions so we catch warnings such as
         // fwrite(): SSL: Broken pipe
         set_error_handler(
@@ -114,8 +114,9 @@ class QueueSpool extends \Swift_ConfigurableSpool
                 throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
             }
         );
+        $cycle = 1;
         while (true) {
-            $this->triggerExtensionHook($consumptionContext, 'onBeforeReceive');
+            $this->triggerExtensionHook(new PreConsume($this->context, $consumer, $this->logger, $cycle, $this->receiveTimeout, $startTime), 'onPreConsume');
             if ($psrMessage = $consumer->receive($this->receiveTimeout)) {
                 try {
                     if (false == $isTransportStarted) {
@@ -146,6 +147,8 @@ class QueueSpool extends \Swift_ConfigurableSpool
             if ($this->reachedExitCondition($count, $time, $consumptionContext)) {
                 break;
             }
+
+            ++$cycle;
         }
 
         restore_error_handler();
@@ -200,7 +203,7 @@ class QueueSpool extends \Swift_ConfigurableSpool
         }
     }
 
-    private function triggerExtensionHook(ConsumptionContext $context, $hook)
+    private function triggerExtensionHook($context, $hook)
     {
         foreach ($this->extensions as $curExtension) {
             $curExtension->$hook($context);
