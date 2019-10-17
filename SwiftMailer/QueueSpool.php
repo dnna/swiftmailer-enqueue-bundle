@@ -158,7 +158,7 @@ class QueueSpool extends \Swift_ConfigurableSpool
         return $count;
     }
 
-    private function reachedExitCondition($count, $time, $consumptionContext)
+    private function reachedExitCondition($count, $time, PreConsume $consumptionContext)
     {
         if ($this->getMessageLimit() && $count >= $this->getMessageLimit()) {
             $this->logger->debug('Exiting because we reached the message limit');
