@@ -96,6 +96,7 @@ class QueueSpool extends \Swift_ConfigurableSpool
     public function flushQueue(\Swift_Transport $transport, &$failedRecipients = null)
     {
         $consumer = $this->context->createConsumer($this->queue);
+        $subscriptionConsumer = $this->context->createSubscriptionConsumer();
         $isTransportStarted = false;
         $failedRecipients = (array)$failedRecipients;
         $count = 0;
@@ -116,7 +117,7 @@ class QueueSpool extends \Swift_ConfigurableSpool
         );
         $cycle = 1;
         while (true) {
-            $consumptionContext = new PreConsume($this->context, $consumer, $this->logger, $cycle, $this->receiveTimeout, $startTime);
+            $consumptionContext = new PreConsume($this->context, $subscriptionConsumer, $this->logger, $cycle, $this->receiveTimeout, $startTime);
             $this->triggerExtensionHook($consumptionContext, 'onPreConsume');
             if ($psrMessage = $consumer->receive($this->receiveTimeout)) {
                 try {
