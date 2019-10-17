@@ -65,7 +65,7 @@ Below is the configuration reference for this bundle:
 ``` yaml
 dnna_swiftmailer_enqueue:
     queue:
-        service_id: enqueue.transport.context
+        service_id: enqueue.transport.default.context
         key: swiftmailer_spool
         requeue_on_exception: false
         max_requeue_attempts: 5
