@@ -18,7 +18,7 @@ class Configuration implements ConfigurationInterface
                 ->addDefaultsIfNotSet()
                     ->children()
                         ->scalarNode('service_id')
-                            ->defaultValue('enqueue.transport.context')
+                            ->defaultValue('enqueue.transport.default.context')
                             ->info('Enqueue transport service id. Usually the default enqueue.transport.context is OK')
                         ->end()
                         ->scalarNode('key')
