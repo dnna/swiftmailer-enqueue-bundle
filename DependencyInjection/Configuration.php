@@ -9,8 +9,8 @@ class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('dnna_swiftmailer_enqueue');
+        $treeBuilder = new TreeBuilder('dnna_swiftmailer_enqueue');
+        $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
             ->children()
